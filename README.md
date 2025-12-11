@@ -4,6 +4,8 @@
 > that people can use to do many things, like opening apps, calculators,
 > quick-notes, etc.
 
+![RustCast Demo PreRelease V1](docs/rustcast_v1_preview.png)
+
 ## Motivations:
 
 I didn't want to pay for raycast + wanted to get better at rust. Raycast in
