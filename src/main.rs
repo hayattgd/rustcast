@@ -11,7 +11,7 @@ use global_hotkey::{
 fn main() -> iced::Result {
     #[cfg(target_os = "macos")]
     {
-        macos::set_activation_policy_regular();
+        macos::set_activation_policy_accessory();
     }
 
     let manager = GlobalHotKeyManager::new().unwrap();

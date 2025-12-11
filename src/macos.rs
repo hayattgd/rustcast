@@ -14,16 +14,6 @@ pub fn set_activation_policy_accessory() {
 }
 
 #[cfg(target_os = "macos")]
-pub fn set_activation_policy_regular() {
-    use objc2::MainThreadMarker;
-    use objc2_app_kit::{NSApp, NSApplicationActivationPolicy};
-
-    let mtm = MainThreadMarker::new().expect("must be on main thread");
-    let app = NSApp(mtm);
-    app.setActivationPolicy(NSApplicationActivationPolicy::Regular);
-}
-
-#[cfg(target_os = "macos")]
 pub fn macos_window_config(handle: &WindowHandle) {
     use iced::wgpu::rwh::RawWindowHandle;
     use objc2::rc::Retained;
@@ -57,6 +47,5 @@ pub fn focus_this_app() {
     let mtm = MainThreadMarker::new().expect("must be on main thread");
     let app = NSApp(mtm);
 
-    app.setActivationPolicy(objc2_app_kit::NSApplicationActivationPolicy::Regular);
     app.activateIgnoringOtherApps(true);
 }

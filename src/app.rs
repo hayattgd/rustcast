@@ -141,19 +141,19 @@ impl Hotkeys {
 }
 
 pub fn default_settings() -> Settings {
-    let mut sets = window::Settings::default();
-    sets.resizable = false;
-    sets.decorations = false;
-    sets.minimizable = false;
-    sets.level = window::Level::AlwaysOnTop;
-    sets.transparent = true;
-    sets.blur = true;
-    sets.size = iced::Size {
-        width: WINDOW_WIDTH,
-        height: DEFAULT_WINDOW_HEIGHT,
-    };
-
-    sets
+    Settings {
+        resizable: false,
+        decorations: false,
+        minimizable: false,
+        level: window::Level::AlwaysOnTop,
+        transparent: true,
+        blur: true,
+        size: iced::Size {
+            width: WINDOW_WIDTH,
+            height: DEFAULT_WINDOW_HEIGHT,
+        },
+        ..Default::default()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -179,7 +179,7 @@ impl Tile {
         let mut apps = get_installed_apps("/Applications/");
         apps.append(&mut get_installed_apps("/System/Applications/"));
         apps.append(&mut get_installed_apps("/System/Applications/Utilities/"));
-        apps.sort_by_key(|x| x.name.len() );
+        apps.sort_by_key(|x| x.name.len());
 
         (
             Self {
@@ -197,7 +197,6 @@ impl Tile {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::OpenWindow => {
-                macos::set_activation_policy_accessory();
                 self.capture_frontmost();
                 focus_this_app();
                 Task::none()
@@ -211,18 +210,24 @@ impl Tile {
                     &mut self
                         .options
                         .iter()
-                        .filter(|x| x.name.to_lowercase() == self.query.to_lowercase())
+                        .filter(|x| {
+                            x.name.trim().to_lowercase() == self.query.trim().to_lowercase()
+                        })
                         .map(|x| x.to_owned())
                         .collect(),
                 );
 
-                results.append(&mut self
-                    .options
-                    .iter()
-                    .filter(|x| x.name.to_lowercase() != self.query.to_lowercase())
-                    .filter(|x| x.name.to_lowercase().contains(&self.query.to_lowercase()))
-                    .map(|x| x.to_owned()).collect()
-                    );
+                results.append(
+                    &mut self
+                        .options
+                        .iter()
+                        .filter(|x| {
+                            x.name.to_lowercase() != self.query.to_lowercase()
+                                && x.name.to_lowercase().contains(&self.query.to_lowercase())
+                        })
+                        .map(|x| x.to_owned())
+                        .collect(),
+                );
 
                 self.results = results;
 
@@ -268,7 +273,6 @@ impl Tile {
             }
 
             Message::HideWindow(a) => {
-                macos::set_activation_policy_regular();
                 self.restore_frontmost();
                 self.visible = false;
                 Task::batch([window::close(a), Task::done(Message::ClearSearchResults)])
@@ -366,9 +370,10 @@ fn handle_hotkeys() -> impl futures::Stream<Item = Message> {
         let receiver = GlobalHotKeyEvent::receiver();
         loop {
             if let Ok(event) = receiver.recv()
-                && event.state == HotKeyState::Pressed {
-                    output.try_send(Message::KeyPressed(event.id)).unwrap();
-                }
+                && event.state == HotKeyState::Pressed
+            {
+                output.try_send(Message::KeyPressed(event.id)).unwrap();
+            }
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
     })
