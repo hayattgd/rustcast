@@ -225,6 +225,13 @@ impl Tile {
                             height: DEFAULT_WINDOW_HEIGHT,
                         },
                     );
+                } else if self.query_lc == "randomvar" {
+                    self.results = vec![App {
+                        open_command: "".to_string(),
+                        icon_path: None,
+                        name: rand::random_range(0..100).to_string(),
+                        name_lc: String::new(),
+                    }]
                 }
 
                 let filter_vec = if self.query_lc.starts_with(&self.prev_query_lc) {
