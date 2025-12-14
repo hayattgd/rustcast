@@ -46,6 +46,8 @@ bit wonky, and will be fixed in the upcoming releases
 - [ ] Clipboard History 20/12/2025
 - [ ] Plugin Support 31/12/2025
 - [ ] Blur / transparent background (Partially implemented on 13/12/2025)
+- [ ] Spotify control - Ability to control spotify via the app
+- [ ] Hyperkey - Map CMD + OPT + CTRL + SHIFT to a physical key
 
 ### Finished:
 
