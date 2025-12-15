@@ -28,10 +28,9 @@ use std::time::Duration;
 pub const WINDOW_WIDTH: f32 = 500.;
 pub const DEFAULT_WINDOW_HEIGHT: f32 = 65.;
 
-#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct App {
-    pub open_command: String,
+    pub open_command: Vec<String>,
     pub icons: Option<iced::widget::image::Handle>,
     pub name: String,
     pub name_lc: String,
@@ -94,7 +93,7 @@ pub enum Message {
     SearchQueryChanged(String, Id),
     KeyPressed(u32),
     HideWindow(Id),
-    RunShellCommand(String),
+    RunShellCommand(Vec<String>),
     ClearSearchResults,
     WindowFocusChanged(Id, bool),
     ClearSearchQuery,
@@ -129,7 +128,6 @@ pub struct Tile {
     focused: bool,
     frontmost: Option<Retained<NSRunningApplication>>,
     config: Config,
-    default_config: Config,
     open_hotkey_id: u32,
 }
 
@@ -146,15 +144,7 @@ impl Tile {
             transform_process_to_ui_element();
         }));
 
-        // SHOULD NEVER HAVE NONE VALUES
-        let default_config = Config::default();
-
-        let store_icons = config
-            .theme
-            .as_ref()
-            .unwrap_or(default_config.theme.as_ref().unwrap())
-            .show_icons
-            .unwrap();
+        let store_icons = config.theme.show_icons;
 
         let user_local_path = std::env::var("HOME").unwrap() + "/Applications/";
 
@@ -165,13 +155,14 @@ impl Tile {
             "/System/Applications/Utilities/",
         ];
 
-        let mut apps: Vec<App> = paths
+        let mut options: Vec<App> = paths
             .par_iter()
             .map(|path| get_installed_apps(path, store_icons))
             .flatten()
             .collect();
 
-        apps.par_sort_by_key(|x| x.name.len());
+        options.par_sort_by_key(|x| x.name.len());
+        options.extend(config.shells.iter().map(|x| x.to_app()));
 
         (
             Self {
@@ -179,13 +170,12 @@ impl Tile {
                 query_lc: String::new(),
                 prev_query_lc: String::new(),
                 results: vec![],
-                options: apps,
+                options,
                 visible: true,
                 frontmost: None,
                 focused: false,
                 config: config.clone(),
-                default_config,
-                theme: config.theme.to_owned().unwrap().to_iced_theme(),
+                theme: config.theme.to_owned().to_iced_theme(),
                 open_hotkey_id: keybind_id,
             },
             Task::batch([open.map(|_| Message::OpenWindow)]),
@@ -216,18 +206,12 @@ impl Tile {
                     );
                 } else if self.query_lc == "randomvar" {
                     self.results = vec![App {
-                        open_command: "".to_string(),
+                        open_command: vec!["".to_string()],
                         icons: None,
                         name: rand::random_range(0..100).to_string(),
                         name_lc: String::new(),
                     }];
-                    return window::resize(
-                        id,
-                        iced::Size {
-                            width: WINDOW_WIDTH,
-                            height: DEFAULT_WINDOW_HEIGHT + 55.,
-                        },
-                    );
+                    return Task::none();
                 }
 
                 self.handle_search_query_changed();
@@ -267,26 +251,11 @@ impl Tile {
                         let to_close = window::latest().map(|x| x.unwrap());
                         Task::batch([
                             to_close.map(Message::HideWindow),
-                            Task::done(
-                                if self
-                                    .config
-                                    .buffer_rules
-                                    .clone()
-                                    .and_then(|x| x.clear_on_hide)
-                                    .unwrap_or(
-                                        self.default_config
-                                            .buffer_rules
-                                            .clone()
-                                            .unwrap()
-                                            .clear_on_hide
-                                            .unwrap(),
-                                    )
-                                {
-                                    Message::ClearSearchQuery
-                                } else {
-                                    Message::_Nothing
-                                },
-                            ),
+                            Task::done(if self.config.buffer_rules.clone().clear_on_hide {
+                                Message::ClearSearchQuery
+                            } else {
+                                Message::_Nothing
+                            }),
                         ])
                     }
                 } else {
@@ -295,31 +264,21 @@ impl Tile {
             }
 
             Message::RunShellCommand(shell_command) => {
-                let cmd = shell_command.split_once(" ").unwrap_or(("", ""));
-                Command::new(cmd.0).arg(cmd.1).spawn().ok();
-                window::latest()
-                    .map(|x| x.unwrap())
-                    .map(Message::HideWindow)
-                    .chain({
-                        let buf_rules = self
-                            .config
-                            .buffer_rules
-                            .clone()
-                            .and_then(|x| x.clear_on_enter)
-                            .unwrap_or_else(|| {
-                                self.default_config
-                                    .buffer_rules
-                                    .clone()
-                                    .unwrap()
-                                    .clear_on_enter
-                                    .unwrap()
-                            });
-                        if buf_rules {
-                            Task::done(Message::ClearSearchQuery)
-                        } else {
-                            Task::none()
-                        }
-                    })
+                dbg!(&shell_command);
+                Command::new("sh")
+                    .arg("-c")
+                    .arg(shell_command.join(" "))
+                    .status()
+                    .ok();
+
+                if self.config.buffer_rules.clear_on_enter {
+                    window::latest()
+                        .map(|x| x.unwrap())
+                        .map(Message::HideWindow)
+                        .chain(Task::done(Message::ClearSearchQuery))
+                } else {
+                    Task::none()
+                }
             }
 
             Message::HideWindow(a) => {
@@ -348,7 +307,7 @@ impl Tile {
 
     pub fn view(&self, wid: window::Id) -> Element<'_, Message> {
         if self.visible {
-            let title_input = text_input(self.config.placeholder.as_ref().unwrap(), &self.query)
+            let title_input = text_input(self.config.placeholder.as_str(), &self.query)
                 .on_input(move |a| Message::SearchQueryChanged(a, wid))
                 .on_paste(move |a| Message::SearchQueryChanged(a, wid))
                 .on_submit({
@@ -367,8 +326,8 @@ impl Tile {
 
             let mut search_results = Column::new();
             for result in &self.results {
-                search_results = search_results
-                    .push(result.render(self.config.theme.clone().unwrap().show_icons.unwrap()));
+                search_results =
+                    search_results.push(result.render(self.config.theme.clone().show_icons));
             }
 
             Column::new()

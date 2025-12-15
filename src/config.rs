@@ -1,65 +1,68 @@
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 
-use iced::theme::Custom;
+use iced::{theme::Custom, widget::image::Handle};
 use serde::{Deserialize, Serialize};
 
+use crate::{app::App, utils::handle_from_icns};
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Config {
-    pub toggle_mod: Option<String>,
-    pub toggle_key: Option<String>,
-    pub buffer_rules: Option<Buffer>,
-    pub theme: Option<Theme>,
-    pub placeholder: Option<String>,
+    pub toggle_mod: String,
+    pub toggle_key: String,
+    pub buffer_rules: Buffer,
+    pub theme: Theme,
+    pub placeholder: String,
+    pub shells: Vec<Shelly>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            toggle_mod: Some("ALT".to_string()),
-            toggle_key: Some("Space".to_string()),
-            buffer_rules: Some(Buffer::default()),
-            theme: Some(Theme::default()),
-            placeholder: Some(String::from("Time to be productive!")),
+            toggle_mod: "ALT".to_string(),
+            toggle_key: "Space".to_string(),
+            buffer_rules: Buffer::default(),
+            theme: Theme::default(),
+            placeholder: String::from("Time to be productive!"),
+            shells: vec![],
         }
     }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Theme {
-    pub text_color: Option<(f32, f32, f32)>,
-    pub background_color: Option<(f32, f32, f32)>,
-    pub background_opacity: Option<f32>,
-    pub blur: Option<bool>,
-    pub show_icons: Option<bool>,
-    pub show_scroll_bar: Option<bool>,
+    pub text_color: (f32, f32, f32),
+    pub background_color: (f32, f32, f32),
+    pub background_opacity: f32,
+    pub blur: bool,
+    pub show_icons: bool,
+    pub show_scroll_bar: bool,
 }
 
 impl Default for Theme {
     fn default() -> Self {
         Self {
-            text_color: Some((0.95, 0.95, 0.96)),
-            background_color: Some((0.11, 0.11, 0.13)),
-            background_opacity: Some(1.),
-            blur: Some(false),
-            show_icons: Some(true),
-            show_scroll_bar: Some(true),
+            text_color: (0.95, 0.95, 0.96),
+            background_color: (0.11, 0.11, 0.13),
+            background_opacity: 1.,
+            blur: false,
+            show_icons: true,
+            show_scroll_bar: true,
         }
     }
 }
 
 impl Theme {
     pub fn to_iced_theme(&self) -> iced::Theme {
-        let default = Self::default();
-        let text_color = self.text_color.unwrap_or(default.text_color.unwrap());
-        let bg_color = self
-            .background_color
-            .unwrap_or(default.background_color.unwrap());
+        let text_color = self.text_color;
+        let bg_color = self.background_color;
         let palette = iced::theme::Palette {
             background: iced::Color {
                 r: bg_color.0,
                 g: bg_color.1,
                 b: bg_color.2,
-                a: self.background_opacity.unwrap_or(1.),
+                a: self.background_opacity,
             },
             text: iced::Color {
                 r: text_color.0,
@@ -97,16 +100,51 @@ impl Theme {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Buffer {
-    pub clear_on_hide: Option<bool>,
-    pub clear_on_enter: Option<bool>,
+    pub clear_on_hide: bool,
+    pub clear_on_enter: bool,
 }
 
 impl Default for Buffer {
     fn default() -> Self {
         Buffer {
-            clear_on_hide: Some(true),
-            clear_on_enter: Some(true),
+            clear_on_hide: true,
+            clear_on_enter: true,
+        }
+    }
+}
+
+/// Command is the command it will run when the button is clicked
+/// Icon_path is the path to an icon, but this is optional
+/// Alias is the text that is used to call this command / search for it
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Shelly {
+    command: Vec<String>,
+    icon_path: Option<String>,
+    alias: String,
+    alias_lc: String,
+}
+
+impl Shelly {
+    pub fn to_app(&self) -> App {
+        let self_clone = self.clone();
+        let icon = self_clone
+            .icon_path
+            .map(|x| {
+                let x = x.replace("~", &std::env::var("HOME").unwrap());
+                if x.ends_with(".icns") {
+                    handle_from_icns(Path::new(&x))
+                } else {
+                    Some(Handle::from_path(Path::new(&x)))
+                }
+            })
+            .flatten();
+        App {
+            open_command: self_clone.command,
+            icons: icon,
+            name: self_clone.alias,
+            name_lc: self_clone.alias_lc,
         }
     }
 }
