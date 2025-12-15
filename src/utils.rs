@@ -153,7 +153,7 @@ pub(crate) fn get_installed_apps(dir: impl AsRef<Path>, store_icons: bool) -> Ve
 
             let name = file_name.strip_suffix(".app").unwrap().to_string();
             Some(App {
-                open_command: format!("open {}", path_str),
+                open_command: vec!["open".to_string(), format!(r#""{path_str}""#)],
                 icons,
                 name_lc: name.to_lowercase(),
                 name,

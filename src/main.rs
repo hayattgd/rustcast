@@ -24,12 +24,8 @@ fn main() -> iced::Result {
     let manager = GlobalHotKeyManager::new().unwrap();
 
     let show_hide = HotKey::new(
-        Some(
-            Modifiers::from_name(&config.toggle_mod.clone().unwrap_or("ALT".to_string()))
-                .unwrap_or(Modifiers::ALT),
-        ),
-        to_key_code(&config.toggle_key.clone().unwrap_or("SPACE".to_string()))
-            .unwrap_or(Code::Space),
+        Some(Modifiers::from_name(&config.toggle_mod).unwrap_or(Modifiers::ALT)),
+        to_key_code(&config.toggle_key).unwrap_or(Code::Space),
     );
 
     manager
