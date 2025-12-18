@@ -44,13 +44,25 @@ impl Function {
                 let query_args = query_string.replace(" ", "+");
                 let query = config.search_url.replace("%s", &query_args);
                 let query = query.strip_suffix("?").unwrap_or(&query);
-                NSWorkspace::new().openURL(
-                    &NSURL::URLWithString_relativeToURL(
-                        &objc2_foundation::NSString::from_str(query),
-                        None,
-                    )
-                    .unwrap(),
-                );
+
+                #[cfg(target_os = "windows")]
+                {
+                    Command::new("powershell")
+                        .args(["-Command", &format!("Start-Process {}", query)])
+                        .status()
+                        .ok();
+                }
+
+                #[cfg(target_os = "macos")]
+                {
+                    NSWorkspace::new().openURL(
+                        &NSURL::URLWithString_relativeToURL(
+                            &objc2_foundation::NSString::from_str(query),
+                            None,
+                        )
+                        .unwrap(),
+                    );
+                }
             }
 
             Function::OpenPrefPane => {
