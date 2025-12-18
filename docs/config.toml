@@ -28,3 +28,15 @@ background_opacity = 1.0
 blur = false
 show_icons = true
 show_scroll_bar = true
+
+[[shells]]
+command = "echo $var1 > file.txt" # This will start with $var1
+icon_path = "" # optional
+alias = "Variables 1" # the name that will be displayed in the results
+alias_lc = "var" # the name used to search for it
+
+[[shells]]
+command = "echo $var2 > file.txt" # This will start with $var2 as there is 1 space in the alias_lc
+icon_path = "" # optional
+alias = "Variables 2" # the name that will be displayed in the results
+alias_lc = "var again" # the name used to search for it
