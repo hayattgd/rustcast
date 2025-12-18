@@ -259,6 +259,15 @@ impl Tile {
                     focus_this_app();
                 }
 
+                #[cfg(target_os = "windows")]
+                {
+                    if let Some(hwnd) = self.frontmost {
+                        unsafe {
+                            let _ = SetForegroundWindow(hwnd);
+                        }
+                    }
+                }
+
                 self.focused = true;
                 Task::none()
             }
