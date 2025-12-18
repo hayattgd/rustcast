@@ -508,13 +508,13 @@ impl Tile {
         }
 
         #[cfg(target_os = "windows")]
-           {
-               if let Some(handle) = self.frontmost {
-                   unsafe {
-                       let _ = SetForegroundWindow(handle);
-                   }
-               }
-
+        {
+            if let Some(handle) = self.frontmost {
+                unsafe {
+                    let _ = SetForegroundWindow(handle);
+                }
+            }
+        }
     }
 }
 
@@ -581,7 +581,7 @@ fn get_installed_windows_app(path: &Path) -> Vec<App> {
 
             // Trick, I saw on internet to point to the exe location..
             let exe_path = key.get_value("DisplayIcon").unwrap_or(OsString::new());
-            if (exe_path.is_empty()) {
+            if exe_path.is_empty() {
                 return;
             }
             // if there is something, it will be in the form of
