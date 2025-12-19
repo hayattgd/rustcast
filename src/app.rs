@@ -28,8 +28,6 @@ use {
 #[cfg(target_os = "windows")]
 use {
     crate::windows::open_on_focused_monitor,
-    crate::windows::open_on_focused_monitor,
-    iced::window::Position::Specific,
     iced::window::Position::Specific,
     windows::Win32::Foundation::HWND,
     windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, SetForegroundWindow},
