@@ -12,7 +12,10 @@ use image::RgbaImage;
 
 use crate::{app::App, commands::Function};
 #[cfg(target_os = "macos")]
-use {crate::macos::get_installed_macos_apps, objc2_app_kit::NSWorkspace, objc2_foundation::NSURL};
+use {
+    crate::macos::get_installed_macos_apps, objc2_app_kit::NSWorkspace, objc2_foundation::NSURL,
+    std::os::unix::fs::PermissionsExt,
+};
 #[cfg(target_os = "windows")]
 use {crate::windows::get_installed_windows_apps, std::process::Command};
 
@@ -280,7 +283,17 @@ pub fn index_dirs_from_config(apps: &mut Vec<App>) -> bool {
             let path = path.unwrap().path();
             let metadata = fs::metadata(&path).unwrap();
 
-            if metadata.is_file() && Path::new(&path).extension().unwrap() == "exe" {
+            #[cfg(target_os = "windows")]
+            let is_executable =
+                metadata.is_file() && path.extension().and_then(|s| s.to_str()) == Some("exe");
+
+            #[cfg(target_os = "macos")]
+            let is_executable = {
+                (metadata.is_file() && (metadata.permissions().mode() & 0o111 != 0))
+                    || path.extension().and_then(|s| s.to_str()) == Some("app")
+            };
+
+            if is_executable {
                 let display_name = path.file_name().unwrap().to_string_lossy().to_string();
                 apps.push(App {
                     open_command: Function::OpenApp(path.to_string_lossy().to_string()),
