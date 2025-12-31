@@ -1,3 +1,6 @@
+//! This modules handles the logic for each "app" that rustcast can load
+//!
+//! An "app" is effectively, one of the results that rustcast returns when you search for something
 use iced::{
     Alignment, Background,
     Length::Fill,
