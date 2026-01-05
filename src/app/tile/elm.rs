@@ -1,7 +1,8 @@
 //! This module handles the logic for the new and view functions according to the elm
 //! architecture. If the subscription function becomes too large, it should be moved to this file
+use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::text::LineHeight;
-use iced::widget::{Column, scrollable, space};
+use iced::widget::{Column, Scrollable, space};
 use iced::window;
 use iced::{Element, Task};
 use iced::{Length::Fill, widget::text_input};
@@ -87,26 +88,28 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .line_height(LineHeight::Relative(1.5))
             .padding(20);
 
+        let scrollbar_direction = if tile.config.theme.show_scroll_bar {
+            Direction::Vertical(Scrollbar::new().width(2).scroller_width(2))
+        } else {
+            Direction::Vertical(Scrollbar::hidden())
+        };
         match tile.page {
             Page::Main => {
                 let mut search_results = Column::new();
                 for result in &tile.results {
                     search_results = search_results.push(result.render(&tile.config.theme));
                 }
-                Column::new()
-                    .push(title_input)
-                    .push(scrollable(search_results))
-                    .into()
+
+                let scrollable = Scrollable::with_direction(search_results, scrollbar_direction);
+                Column::new().push(title_input).push(scrollable).into()
             }
             Page::ClipboardHistory => {
                 let mut clipboard_history = Column::new();
                 for result in &tile.clipboard_content {
                     clipboard_history = clipboard_history.push(result.render_clipboard_item());
                 }
-                Column::new()
-                    .push(title_input)
-                    .push(scrollable(clipboard_history))
-                    .into()
+                let scrollable = Scrollable::with_direction(clipboard_history, scrollbar_direction);
+                Column::new().push(title_input).push(scrollable).into()
             }
         }
     } else {
