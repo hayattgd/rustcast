@@ -25,6 +25,7 @@ pub fn default_app_paths() -> Vec<String> {
 }
 
 use crate::app::apps::AppCommand;
+use crate::config::Theme;
 use crate::{
     app::{Message, Page, apps::App, default_settings, tile::Tile},
     config::Config,
@@ -96,6 +97,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .id("query")
             .width(Fill)
             .line_height(LineHeight::Relative(1.5))
+            .style(|_, _| text_input_style(&tile.config.theme))
             .padding(20);
 
         let scrollbar_direction = if tile.config.theme.show_scroll_bar {
@@ -117,7 +119,7 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
                 let mut clipboard_history = Column::new();
                 for result in &tile.clipboard_content {
                     clipboard_history =
-                        clipboard_history.push(result.render_clipboard_item(&tile.config.theme));
+                        clipboard_history.push(result.render_clipboard_item(tile.config.theme.clone()));
                 }
                 let scrollable = Scrollable::with_direction(clipboard_history, scrollbar_direction);
                 Column::new().push(title_input).push(scrollable).into()
@@ -125,5 +127,30 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
         }
     } else {
         space().into()
+    }
+}
+
+fn text_input_style(theme: &Theme) -> iced::widget::text_input::Style {
+    text_input::Style {
+        background: iced::Background::Color(theme.bg_color()),
+        border: iced::Border {
+            color: iced::Color {
+                r: 0.95,
+                g: 0.95,
+                b: 0.95,
+                a: 0.7,
+            },
+            width: 0.5,
+            radius: iced::border::Radius {
+                top_left: 0.,
+                top_right: 0.,
+                bottom_right: 0.,
+                bottom_left: 0.,
+            },
+        },
+        icon: theme.text_color(0.),
+        placeholder: theme.text_color(0.7),
+        value: theme.text_color(1.),
+        selection: theme.text_color(0.2),
     }
 }
