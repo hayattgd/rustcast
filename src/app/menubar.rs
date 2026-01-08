@@ -18,7 +18,7 @@ pub fn new_menu_icon(mtm: MainThreadMarker) {
     }
 
     let menu = NSMenu::new(mtm);
-    menu.setAutoenablesItems(true);
+    menu.setAutoenablesItems(false);
 
     let quit_title = NSString::from_str("Quit RustCast");
     let quit_item = unsafe {
@@ -29,7 +29,17 @@ pub fn new_menu_icon(mtm: MainThreadMarker) {
             &NSString::from_str("q"),
         )
     };
+
+    let version_title = NSString::from_str(
+        &("RustCast Version: ".to_string()
+            + option_env!("APP_VERSION").unwrap_or("Unknown Version")),
+    );
+    let version_item = NSMenuItem::new(mtm);
+    version_item.setTitle(&version_title);
+    version_item.setEnabled(false);
+
     menu.addItem(&quit_item);
+    menu.addItem(&version_item);
 
     status_item.setMenu(Some(&menu));
     status_item.setVisible(true);
