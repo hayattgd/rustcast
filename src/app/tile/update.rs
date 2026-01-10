@@ -99,7 +99,7 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         height: 55. + DEFAULT_WINDOW_HEIGHT,
                     },
                 );
-            } else if tile.query_lc.split(" ").count() > 2 || tile.query_lc.ends_with("?") {
+            } else if tile.query_lc.split(" ").count() > 1 || tile.query_lc.ends_with("?") {
                 tile.results = vec![App {
                     open_command: AppCommand::Function(Function::GoogleSearch(tile.query.clone())),
                     icons: None,
