@@ -158,7 +158,7 @@ impl App {
             .width(Fill);
 
         let (highlight_opacity, border_width) = if focussed_id == id_num {
-            (1., 0.4)
+            (0.7, 0.55)
         } else {
             (0.5, 0.1)
         };
