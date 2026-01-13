@@ -21,7 +21,7 @@ use crate::{
 };
 
 #[cfg(target_os = "macos")]
-use crate::macos::{self, transform_process_to_ui_element};
+use crate::cross_platform::macos::{self, transform_process_to_ui_element};
 
 pub fn default_app_paths() -> Vec<String> {
     #[cfg(target_os = "macos")]
@@ -58,7 +58,7 @@ pub fn new(
 
         use iced::window::Position;
 
-        use crate::windows::open_on_focused_monitor;
+        use crate::cross_platform::windows::open_on_focused_monitor;
         let pos = open_on_focused_monitor();
         settings.position = Position::Specific(pos);
     }

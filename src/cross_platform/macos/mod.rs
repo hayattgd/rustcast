@@ -1,5 +1,8 @@
 //! Macos specific logic, such as window settings, etc.
 #![allow(deprecated)]
+
+pub mod haptics;
+
 use crate::app::apps::{App, AppCommand};
 use crate::commands::Function;
 use crate::config::Config;

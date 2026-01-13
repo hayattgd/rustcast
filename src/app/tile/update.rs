@@ -246,8 +246,8 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                         // get normal settings and modify position
 
                         use iced::window::Position;
-
-                        use crate::windows::open_on_focused_monitor;
+                        use crate::cross_platform::windows::open_on_focused_monitor;
+                        
                         let pos = open_on_focused_monitor();
                         let mut settings = default_settings();
                         settings.position = Position::Specific(pos);
