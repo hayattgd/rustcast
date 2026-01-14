@@ -3,7 +3,7 @@
 
 use global_hotkey::hotkey::{Code, Modifiers};
 use iced::border::Radius;
-use iced::widget::scrollable::{Direction, Scrollbar};
+use iced::widget::scrollable::{Anchor, Direction, Scrollbar};
 use iced::widget::text::LineHeight;
 use iced::widget::{Column, Scrollable, container, space};
 use iced::{Color, window};
@@ -112,7 +112,12 @@ pub fn view(tile: &Tile, wid: window::Id) -> Element<'_, Message> {
             .padding(20);
 
         let scrollbar_direction = if tile.config.theme.show_scroll_bar {
-            Direction::Vertical(Scrollbar::new().width(2).scroller_width(2))
+            Direction::Vertical(
+                Scrollbar::new()
+                    .width(2)
+                    .scroller_width(2)
+                    .anchor(Anchor::Start),
+            )
         } else {
             Direction::Vertical(Scrollbar::hidden())
         };
