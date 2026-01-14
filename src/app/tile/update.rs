@@ -212,12 +212,17 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
 
         Message::ChangeFocus(key) => {
             let u32_len = tile.results.len() as u32;
-            match key {
-                ArrowKey::ArrowDown => tile.focus_id = (tile.focus_id + 1) % u32_len,
-                ArrowKey::ArrowUp => tile.focus_id = (tile.focus_id + u32_len - 1) % u32_len,
-                _ => {}
+            if u32_len > 0 {
+                match key {
+                    ArrowKey::ArrowDown => tile.focus_id = (tile.focus_id + 1) % u32_len,
+                    ArrowKey::ArrowUp => tile.focus_id = (tile.focus_id + u32_len - 1) % u32_len,
+                    _ => {}
+                }
+
+                operation::focus(format!("result-{}", tile.focus_id))
+            } else {
+                Task::none()
             }
-            operation::focus(format!("result-{}", tile.focus_id))
         }
 
         Message::OpenFocused => match tile.results.get(tile.focus_id as usize) {
