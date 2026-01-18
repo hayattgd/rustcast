@@ -70,6 +70,8 @@ pub fn handle_update(tile: &mut Tile, message: Message) -> Task<Message> {
                     Task::done(Message::ReturnFocus),
                 ])
             } else {
+                tile.page = Page::Main;
+
                 Task::batch(vec![
                     Task::done(Message::ClearSearchQuery),
                     Task::done(Message::ClearSearchResults),
