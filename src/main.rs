@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod haptics;
 mod macos;
+mod unit_conversion;
 mod styles;
 mod utils;
 
